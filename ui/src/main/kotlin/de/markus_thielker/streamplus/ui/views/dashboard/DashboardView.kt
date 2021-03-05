@@ -1,0 +1,18 @@
+package de.markus_thielker.streamplus.ui.views.dashboard
+
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+
+@Composable
+fun dashboardView() {
+
+    Column(
+        modifier = Modifier.padding(8.dp)
+    ) {
+        Text("This is dashboardView")
+    }
+}
