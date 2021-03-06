@@ -1,6 +1,6 @@
 package de.markus_thielker.streamplus.core.twitch.message
 
-data class TwitchMessage(
+class TwitchMessage(
 
     val channel : TwitchMessageChannel,
     val messageId : String,
@@ -13,4 +13,9 @@ data class TwitchMessage(
     val isModerator : Boolean = false,
     val isSubscriber : Boolean = false,
 
-    )
+    ) {
+
+    override fun toString() : String {
+        return "$channel <$messageId> <$color> -> $author [ broadcaster = $isBroadcaster | moderator = $isModerator | subscriber = $isSubscriber ] -> $message"
+    }
+}

@@ -25,7 +25,7 @@ class Chatbot(private val statusChangedListener : () -> Unit) {
     /**
      * The chatbot connects it's both twitch accounts, validates their login and if successful joins the streamer-accounts chat.
      *
-     * @author Markus +\last name/+
+     * @author Markus Thielker
      *
      * */
     fun connect() {
@@ -42,7 +42,7 @@ class Chatbot(private val statusChangedListener : () -> Unit) {
             // update status and trigger button text
             status = ChatbotStatus.Running
 
-            // TODO: check if account are connected
+            // TODO: check if accounts are connected
 
             // finally join streamers chat
             joinChat()
@@ -50,9 +50,9 @@ class Chatbot(private val statusChangedListener : () -> Unit) {
     }
 
     /**
-     * This function is called
+     * This function is called to send a message to the chat, the bot is connected to.
      *
-     * @author Markus +\last name/+
+     * @author Markus Thielker
      *
      * */
     private fun sendMessage(message : String) {
@@ -61,7 +61,14 @@ class Chatbot(private val statusChangedListener : () -> Unit) {
         println("#automated# ${chatbot.username}: $message".trimIndent())
     }
 
+    /**
+     * This function is called to disconnect the chatbot from the chat.
+     *
+     * @author Markus Thielker
+     *
+     * */
     fun disconnect() {
+
         status = ChatbotStatus.Shutdown
 
         sendMessage("/me disconnected [Kotlin]")
@@ -76,6 +83,12 @@ class Chatbot(private val statusChangedListener : () -> Unit) {
         status = ChatbotStatus.Stopped
     }
 
+    /**
+     * This function uses the previously validated Twitch accounts to connect the chatbot to the streamers chat and starts listening to it.
+     *
+     * @author Markus Thielker
+     *
+     * */
     private fun joinChat() {
 
         // connect to twitch chat server

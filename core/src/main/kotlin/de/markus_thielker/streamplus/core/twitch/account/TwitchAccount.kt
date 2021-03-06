@@ -38,7 +38,7 @@ class TwitchAccount(private val role : TwitchAccountRole) {
 
     // constant values, set for object wide reuse
     private val clientId = "xa54hwj838r3y1ou3da65e8nlu4b6r"
-    private val clientSecret = "muuvex2h5j2p7xu9aetk6kd7sbmr9p" // client secret hidden for security reasons
+    private val clientSecret = "*****" // client secret hidden for security reasons
     private val redirectUri = "https://imtherayze.com/authentication"
 
     /**
