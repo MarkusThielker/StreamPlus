@@ -66,10 +66,11 @@ fun main() {
         onPrimary = Color.White
     )
 
-    // com.imtherayze.streamplus.ui.main window
+    // show main window
     Window(
         title = "StreamPlus",
         size = IntSize(1280, 720),
+        onDismissRequest = { if (chatbot.status == ChatbotStatus.Running) chatbot.disconnect() }
     ) {
 
         // base theme
