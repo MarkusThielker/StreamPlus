@@ -13,7 +13,7 @@ dependencies {
 
 compose.desktop {
     application {
-        mainClass = "ApplicationKt"
+        mainClass = "de.markus_thielker.streamplus.ui.ApplicationKt"
         nativeDistributions {
             targetFormats(
                 org.jetbrains.compose.desktop.application.dsl.TargetFormat.Dmg,
