@@ -9,4 +9,4 @@ pluginManagement {
 
 rootProject.name = "StreamPlus"
 
-include("core", "ui")
+include("core", "ui", "server")
