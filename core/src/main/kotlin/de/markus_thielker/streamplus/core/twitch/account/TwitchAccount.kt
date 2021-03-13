@@ -140,8 +140,9 @@ class TwitchAccount(private val role : TwitchAccountRole) {
         Desktop.getDesktop().browse(URI("$url$scopes"))
 
         // get user input of code due to missing GUI implementation
-        print("Enter code ($role) : ")
-        return Scanner(System.`in`).nextLine()
+        // TODO: request authorization code in UI dialog
+        print("Enter code ($role): ")
+        return readLine() ?: ""
     }
 
     /**
