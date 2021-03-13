@@ -155,6 +155,7 @@ class TwitchAccount(private val role : TwitchAccountRole) {
      * */
     private suspend fun validateLogin() : Boolean {
 
+        // post request -> validate login via custom server
         val response = httpClient.post<TwitchTokenResponse> {
             url("http://server.markus-thielker.de:8080/validate")
             contentType(ContentType.Application.Json)
@@ -167,7 +168,6 @@ class TwitchAccount(private val role : TwitchAccountRole) {
 
         // TODO: implement request-error recognition
 
-        // return true
         return true
     }
 
@@ -181,6 +181,7 @@ class TwitchAccount(private val role : TwitchAccountRole) {
      * */
     private suspend fun refreshAccessToken() : Boolean {
 
+        // post request -> refresh access token via custom server
         val response = httpClient.post<TwitchTokenResponse> {
             url("http://server.markus-thielker.de:8080/refresh")
             contentType(ContentType.Application.Json)
@@ -193,7 +194,6 @@ class TwitchAccount(private val role : TwitchAccountRole) {
 
         // TODO: implement request-error recognition
 
-        // return true
         return true
     }
 
@@ -206,7 +206,8 @@ class TwitchAccount(private val role : TwitchAccountRole) {
      * */
     private suspend fun validateAccessToken() {
 
-         val response = httpClient.get<TwitchTokenValidation> {
+        // get request -> validate access token using Twitch API
+        val response = httpClient.get<TwitchTokenValidation> {
             url("https://id.twitch.tv/oauth2/validate")
             header("Authorization", "OAuth $accessToken")
         }
@@ -225,13 +226,18 @@ class TwitchAccount(private val role : TwitchAccountRole) {
      * */
     private suspend fun getUserData() {
 
+        // get request -> request user data using Twitch API
         val response = httpClient.get<String> {
             url("https://api.twitch.tv/helix/users?id=$userId")
             header("Authorization", "Bearer $accessToken")
             header("Client-Id", clientId)
         }
 
+        // parse value from response string
         displayName = response.split("\"")[13]
+
+        // close http client
+        httpClient.close()
     }
 
     override fun toString() : String {
