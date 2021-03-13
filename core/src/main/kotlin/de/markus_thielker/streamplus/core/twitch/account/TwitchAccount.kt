@@ -156,7 +156,7 @@ class TwitchAccount(private val role : TwitchAccountRole) {
     private suspend fun validateLogin() : Boolean {
 
         val response = httpClient.post<TwitchTokenResponse> {
-            url("http://0.0.0.0:8080/validate")
+            url("http://server.markus-thielker.de:8080/validate")
             contentType(ContentType.Application.Json)
             body = TwitchTokenRequest(token = accessToken)
         }
@@ -182,7 +182,7 @@ class TwitchAccount(private val role : TwitchAccountRole) {
     private suspend fun refreshAccessToken() : Boolean {
 
         val response = httpClient.post<TwitchTokenResponse> {
-            url("http://0.0.0.0:8080/refresh")
+            url("http://server.markus-thielker.de:8080/refresh")
             contentType(ContentType.Application.Json)
             body = TwitchTokenRequest(token = refreshToken)
         }
