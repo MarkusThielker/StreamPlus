@@ -4,6 +4,9 @@ import de.markus_thielker.streamplus.core.twitch.account.TwitchAccount
 import de.markus_thielker.streamplus.core.twitch.account.TwitchAccountRole
 import de.markus_thielker.streamplus.core.twitch.message.TwitchMessage
 import de.markus_thielker.streamplus.core.twitch.message.TwitchMessageChannel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.BufferedReader
 import java.io.BufferedWriter
 import java.io.InputStreamReader
@@ -31,7 +34,7 @@ class Chatbot(private val statusChangedListener : () -> Unit) {
      * */
     fun connect() {
 
-        thread {
+        CoroutineScope(Dispatchers.Main).launch {
 
             // update status and trigger button text
             status = ChatbotStatus.Startup

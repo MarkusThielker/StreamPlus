@@ -6,9 +6,13 @@ dependencies {
 
     implementation(project(":shared"))
 
-    // google gson
-    implementation("com.google.code.gson:gson:2.8.6")
+    implementation("io.ktor:ktor-client-core:1.5.2")
+    implementation("io.ktor:ktor-client-cio:1.5.2")
+    implementation("io.ktor:ktor-client-core-jvm:1.5.2")
+    implementation("io.ktor:ktor-client-apache:1.5.2")
+    implementation("io.ktor:ktor-client-json-jvm:1.5.2")
+    implementation("io.ktor:ktor-client-gson:1.5.2")
+    implementation("io.ktor:ktor-gson:1.5.2")
 
-    // kotlin coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2")
 }

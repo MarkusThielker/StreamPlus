@@ -2,12 +2,15 @@ package de.markus_thielker.streamplus.core.twitch.account
 
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import khttp.responses.Response
+import de.markus_thielker.streamplus.shared.network.*
+import io.ktor.client.*
+import io.ktor.client.engine.apache.*
+import io.ktor.client.features.json.*
+import io.ktor.client.request.*
+import io.ktor.http.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.json.JSONArray
-import org.json.JSONObject
 import java.awt.Desktop
 import java.io.File
 import java.net.URI
@@ -38,8 +41,16 @@ class TwitchAccount(private val role : TwitchAccountRole) {
 
     // constant values, set for object wide reuse
     private val clientId = "xa54hwj838r3y1ou3da65e8nlu4b6r"
-    private val clientSecret = "*****" // client secret hidden for security reasons
     private val redirectUri = "https://imtherayze.com/authentication"
+
+    private val httpClient = HttpClient(Apache) {
+        install(feature = JsonFeature) {
+            serializer = GsonSerializer {
+                serializeNulls()
+                disableHtmlEscaping()
+            }
+        }
+    }
 
     /**
      * This function is called when the twitch account shall connect to the twitch api application.
@@ -48,7 +59,7 @@ class TwitchAccount(private val role : TwitchAccountRole) {
      * @author Markus Thielker
      *
      * */
-    fun connect() : Boolean {
+    suspend fun connect() : Boolean {
 
         // init variable for account tokens
         val accounts : HashMap<TwitchAccountRole, HashMap<String, String>>
@@ -141,18 +152,17 @@ class TwitchAccount(private val role : TwitchAccountRole) {
      * @author Markus Thielker
      *
      * */
-    private fun validateLogin() : Boolean {
+    private suspend fun validateLogin() : Boolean {
 
-        // set url for login validation request
-        val url = "https://id.twitch.tv/oauth2/token?client_id=$clientId&client_secret=$clientSecret&code=$accessToken&grant_type=authorization_code&redirect_uri=$redirectUri"
-
-        // post request and get result as json-object
-        val response : Response = khttp.post(url)
-        val obj : JSONObject = response.jsonObject
+        val response = httpClient.post<TwitchTokenResponse> {
+            url("http://0.0.0.0:8080/validate")
+            contentType(ContentType.Application.Json)
+            body = TwitchTokenRequest(token = accessToken)
+        }
 
         // get values from received response JSON string
-        accessToken = obj["access_token"] as String // -> overwrite temporary code with final token
-        refreshToken = obj["refresh_token"] as String
+        accessToken = response.accessToken
+        refreshToken = response.refreshToken
 
         // TODO: implement request-error recognition
 
@@ -168,18 +178,17 @@ class TwitchAccount(private val role : TwitchAccountRole) {
      * @author Markus Thielker
      *
      * */
-    private fun refreshAccessToken() : Boolean {
+    private suspend fun refreshAccessToken() : Boolean {
 
-        // set url for access token refresh request
-        val url = "https://id.twitch.tv/oauth2/token?client_id=$clientId&client_secret=$clientSecret&refresh_token=$refreshToken&grant_type=refresh_token&redirect_uri=$redirectUri"
-
-        // post request and get result as json-object
-        val response : Response = khttp.post(url)
-        val obj : JSONObject = response.jsonObject
+        val response = httpClient.post<TwitchTokenResponse> {
+            url("http://0.0.0.0:8080/refresh")
+            contentType(ContentType.Application.Json)
+            body = TwitchTokenRequest(token = refreshToken)
+        }
 
         // get values from received response JSON string
-        accessToken = obj["access_token"] as String
-        refreshToken = obj["refresh_token"] as String
+        accessToken = response.accessToken
+        refreshToken = response.refreshToken
 
         // TODO: implement request-error recognition
 
@@ -194,18 +203,16 @@ class TwitchAccount(private val role : TwitchAccountRole) {
      * @author Markus Thielker
      *
      * */
-    private fun validateAccessToken() {
+    private suspend fun validateAccessToken() {
 
-        // set url for token validation request
-        val url = "https://id.twitch.tv/oauth2/validate"
-
-        // post request and get result as json-object
-        val response : Response = khttp.get(url = url, headers = mapOf("Authorization" to "OAuth $accessToken"))
-        val obj : JSONObject = response.jsonObject
+         val response = httpClient.get<TwitchTokenValidation> {
+            url("https://id.twitch.tv/oauth2/validate")
+            header("Authorization", "OAuth $accessToken")
+        }
 
         // get username (lowercase) and userId from response
-        username = obj["login"] as String
-        userId = obj["user_id"] as String
+        username = response.login
+        userId = response.user_id
     }
 
     /**
@@ -215,20 +222,15 @@ class TwitchAccount(private val role : TwitchAccountRole) {
      * @author Markus Thielker
      *
      * */
-    private fun getUserData() {
+    private suspend fun getUserData() {
 
-        // set url for user data request
-        val url = "https://api.twitch.tv/helix/users?id=$userId"
+        val response = httpClient.get<String> {
+            url("https://api.twitch.tv/helix/users?id=$userId")
+            header("Authorization", "Bearer $accessToken")
+            header("Client-Id", clientId)
+        }
 
-        // post request and get result as json-object
-        val response : Response = khttp.get(url = url, headers = mapOf("Authorization" to "Bearer $accessToken", "Client-ID" to clientId))
-        val obj : JSONObject = response.jsonObject
-
-        // get displayName from response
-        val tmp = obj["data"] as JSONArray
-        val tmpTmp = tmp[0] as JSONObject
-
-        displayName = tmpTmp["display_name"] as String
+        displayName = response.split("\"")[13]
     }
 
     override fun toString() : String {
