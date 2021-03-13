@@ -43,14 +43,7 @@ class TwitchAccount(private val role : TwitchAccountRole) {
     private val clientId = "xa54hwj838r3y1ou3da65e8nlu4b6r"
     private val redirectUri = "https://imtherayze.com/authentication"
 
-    private val httpClient = HttpClient(Apache) {
-        install(feature = JsonFeature) {
-            serializer = GsonSerializer {
-                serializeNulls()
-                disableHtmlEscaping()
-            }
-        }
-    }
+    private lateinit var httpClient : HttpClient
 
     /**
      * This function is called when the twitch account shall connect to the twitch api application.
@@ -78,6 +71,16 @@ class TwitchAccount(private val role : TwitchAccountRole) {
             // get stored tokens from file
             accessToken = accounts[role]!!["accessToken"] as String
             refreshToken = accounts[role]!!["refreshToken"] as String
+        }
+
+        // initialize httpClient on every connection
+        httpClient = HttpClient(Apache) {
+            install(feature = JsonFeature) {
+                serializer = GsonSerializer {
+                    serializeNulls()
+                    disableHtmlEscaping()
+                }
+            }
         }
 
         // check if any of the tokens is missing
