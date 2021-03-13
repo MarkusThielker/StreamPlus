@@ -4,8 +4,7 @@ plugins {
 
 dependencies {
 
-    // khttp
-    implementation("khttp:khttp:0.1.0")
+    implementation(project(":shared"))
 
     // google gson
     implementation("com.google.code.gson:gson:2.8.6")
