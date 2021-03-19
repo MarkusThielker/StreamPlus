@@ -14,4 +14,7 @@ dependencies {
     implementation("io.ktor:ktor-server-netty:1.5.2")
     implementation("ch.qos.logback:logback-classic:1.2.3")
     testImplementation("io.ktor:ktor-server-tests:1.5.2")
+
+    implementation("io.ktor:ktor-network-tls-certificates:1.5.2")
+    implementation(kotlin("script-runtime"))
 }
