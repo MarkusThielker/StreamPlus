@@ -7,6 +7,7 @@ import de.markus_thielker.streamplus.core.twitch.message.TwitchMessageChannel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.BufferedWriter
 import java.io.InputStreamReader
@@ -34,14 +35,19 @@ class Chatbot(private val statusChangedListener : () -> Unit) {
      * */
     fun connect() {
 
-        CoroutineScope(Dispatchers.Main).launch {
+        CoroutineScope(Dispatchers.Default).launch {
 
             // update status and trigger button text
             status = ChatbotStatus.Startup
 
-            // connect both twitch accounts (chatbot first for browser session reasons)
-            chatbot.connect()
-            streamer.connect()
+            // move account connection to IO scope
+            withContext(Dispatchers.IO) {
+
+                // connect both twitch accounts (chat bot first for browser session reasons)
+                chatbot.connect()
+                streamer.connect()
+
+            }
 
             // update status and trigger button text
             status = ChatbotStatus.Running
