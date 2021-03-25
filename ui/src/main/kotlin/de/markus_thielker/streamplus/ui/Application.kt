@@ -36,7 +36,7 @@ val chatbotChangeListener : () -> Unit = {
         }
 
         ChatbotStatus.Shutdown -> {
-            chatbotButtonText.value = "Chatbot stopping"
+            chatbotButtonText.value = "Chatbot stopping..."
         }
 
         ChatbotStatus.Stopped -> {
@@ -134,7 +134,7 @@ fun sideMenu() {
                 )
             }
 
-            // region at bottom (com.imtherayze.streamplus.ui.getChatbot controls)
+            // region at bottom (chatbot controls)
             Column(
                 modifier = Modifier.width(200.dp).fillMaxHeight(),
                 verticalArrangement = Arrangement.Bottom
