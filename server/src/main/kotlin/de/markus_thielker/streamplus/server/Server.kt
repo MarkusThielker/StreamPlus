@@ -6,18 +6,30 @@ import io.ktor.application.*
 import io.ktor.features.*
 import io.ktor.gson.*
 import io.ktor.http.*
+import io.ktor.network.tls.certificates.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.util.pipeline.*
 import khttp.responses.Response
 import org.json.JSONObject
+import java.io.File
 
 private const val clientId = "xa54hwj838r3y1ou3da65e8nlu4b6r"
 private const val clientSecret = "*****" // client secret hidden for security reasons
 private const val redirectUri = "https://imtherayze.com/authentication"
 
-fun main(args : Array<String>) : Unit = io.ktor.server.netty.EngineMain.main(args)
+fun main(args : Array<String>) {
+    // generate SSL certificate
+    //TODO self generated must be replaced by a certificate from the CA
+    val file = File("build/temporary.jks")
+    if (!file.exists()) {
+        file.parentFile.mkdirs()
+        generateCertificate(file)
+    }
+
+    return io.ktor.server.netty.EngineMain.main(args)
+}
 
 /**
  * This function specifies the main module of the ktor-server by installing basic statusPages and contentNegotiation
@@ -36,6 +48,10 @@ fun Application.module() {
 
     install(ContentNegotiation) {
         gson()
+    }
+
+    install(HttpsRedirect) {
+        sslPort = 8443
     }
 
     routing {
@@ -70,6 +86,13 @@ fun Application.module() {
                     "redirect_uri=$redirectUri"
 
             postAndRespond(url, this)
+        }
+
+        //Test link for SSL, use following command to connect to this server over ssl
+        //curl --insecure https://localhost:8443/test
+        //TODO convert CA certificate to keytool format https://ktor.io/docs/ssl.html#ktor
+        get("/test"){
+            call.respond("Hello World")
         }
     }
 }
