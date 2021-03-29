@@ -32,16 +32,8 @@ class Application : UIComponent {
 
     fun run() {
 
-        // get AppData path
-        val appDataPath = System.getenv("AppData")
-
-        // create directory if not existing
-        val dir = File("$appDataPath\\StreamPlus")
-        if (!dir.exists()) dir.mkdir()
-
-        // create file if not existing
-        val file = File("$appDataPath\\StreamPlus\\credentials.json")
-        if (file.createNewFile()) file.writeText("{\"Streamer\":{\"accessToken\":\"\",\"refreshToken\":\"\"},\"Chatbot\":{\"accessToken\":\"\",\"refreshToken\":\"\"}}")
+        // check for files and create missing ones
+        checkAppDataStructure()
 
         // create theme
         val lightColors = lightColors(
@@ -76,6 +68,20 @@ class Application : UIComponent {
                 }
             }
         }
+    }
+
+    private fun checkAppDataStructure() {
+
+        // get AppData path
+        val appDataPath = System.getenv("AppData")
+
+        // create directory if not existing
+        val dir = File("$appDataPath\\StreamPlus")
+        if (!dir.exists()) dir.mkdir()
+
+        // create file if not existing
+        val file = File("$appDataPath\\StreamPlus\\credentials.json")
+        if (file.createNewFile()) file.writeText("{\"Streamer\":{\"accessToken\":\"\",\"refreshToken\":\"\"},\"Chatbot\":{\"accessToken\":\"\",\"refreshToken\":\"\"}}")
     }
 
     @Composable
