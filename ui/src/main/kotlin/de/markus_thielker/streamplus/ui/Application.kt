@@ -12,159 +12,155 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import de.markus_thielker.streamplus.core.Chatbot
 import de.markus_thielker.streamplus.core.ChatbotStatus
+import de.markus_thielker.streamplus.core.UIComponent
 import de.markus_thielker.streamplus.ui.views.NavigationView
 import de.markus_thielker.streamplus.ui.views.commands.commandsView
 import de.markus_thielker.streamplus.ui.views.dashboard.dashboardView
 import de.markus_thielker.streamplus.ui.views.settings.settingsView
 import java.io.File
 
-// navigation component
-val navigationView = mutableStateOf(NavigationView.Dashboard)
+fun main() { Application().run() }
 
-// chatbot components
-val chatbotButtonText = mutableStateOf("Start Chatbot")
-val chatbotChangeListener : () -> Unit = {
+class Application : UIComponent {
 
-    when (chatbot.status) {
+    // navigation component
+    private val navigationView = mutableStateOf(NavigationView.Dashboard)
 
-        ChatbotStatus.Startup -> {
-            chatbotButtonText.value = "Chatbot starting..."
-        }
+    // chatbot components
+    private val chatbotButtonText = mutableStateOf("Start Chatbot")
+    private var chatbot = Chatbot(this)
 
-        ChatbotStatus.Running -> {
-            chatbotButtonText.value = "Stop Chatbot"
-        }
+    fun run() {
 
-        ChatbotStatus.Shutdown -> {
-            chatbotButtonText.value = "Chatbot stopping..."
-        }
+        // get AppData path
+        val appDataPath = System.getenv("AppData")
 
-        ChatbotStatus.Stopped -> {
-            chatbotButtonText.value = "Start Chatbot"
-        }
-    }
-}
-var chatbot = Chatbot(chatbotChangeListener)
+        // create directory if not existing
+        val dir = File("$appDataPath\\StreamPlus")
+        if (!dir.exists()) dir.mkdir()
 
-fun main() {
+        // create file if not existing
+        val file = File("$appDataPath\\StreamPlus\\credentials.json")
+        if (file.createNewFile()) file.writeText("{\"Streamer\":{\"accessToken\":\"\",\"refreshToken\":\"\"},\"Chatbot\":{\"accessToken\":\"\",\"refreshToken\":\"\"}}")
 
-    // get AppData path
-    val appDataPath = System.getenv("AppData")
+        // create theme
+        val lightColors = lightColors(
+            primary = Color(0xFFFF4500),
+            primaryVariant = Color(0xFFFF3300),
+            onPrimary = Color.White
+        )
 
-    // create directory if not existing
-    val dir = File("$appDataPath\\StreamPlus")
-    if (!dir.exists()) dir.mkdir()
-
-    // create file if not existing
-    val file = File("$appDataPath\\StreamPlus\\credentials.json")
-    if (file.createNewFile()) file.writeText("{\"Streamer\":{\"accessToken\":\"\",\"refreshToken\":\"\"},\"Chatbot\":{\"accessToken\":\"\",\"refreshToken\":\"\"}}")
-
-    // create theme
-    val lightColors = lightColors(
-        primary = Color(0xFFFF4500),
-        primaryVariant = Color(0xFFFF3300),
-        onPrimary = Color.White
-    )
-
-    // show main window
-    Window(
-        title = "StreamPlus",
-        size = IntSize(1280, 720),
-        onDismissRequest = { if (chatbot.status == ChatbotStatus.Running) chatbot.disconnect() }
-    ) {
-
-        // base theme
-        MaterialTheme(
-            colors = lightColors,
+        // show main window
+        Window(
+            title = "StreamPlus",
+            size = IntSize(1280, 720),
+            onDismissRequest = { if (chatbot.status == ChatbotStatus.Running) chatbot.disconnect() }
         ) {
 
-            Row {
+            // base theme
+            MaterialTheme(
+                colors = lightColors,
+            ) {
 
-                // menu bar
-                sideMenu()
+                Row {
 
-                // navigation host
-                when (navigationView.value) {
-                    NavigationView.Dashboard -> dashboardView()
-                    NavigationView.Commands -> commandsView()
-                    NavigationView.Settings -> settingsView()
+                    // menu bar
+                    sideMenu()
+
+                    // navigation host
+                    when (navigationView.value) {
+                        NavigationView.Dashboard -> dashboardView()
+                        NavigationView.Commands -> commandsView()
+                        NavigationView.Settings -> settingsView()
+                    }
                 }
             }
         }
     }
-}
 
-@Composable
-fun sideMenu() {
+    @Composable
+    fun sideMenu() {
 
-    // base with elevation
-    Card(
-        elevation = 5.dp,
-        modifier = Modifier.fillMaxHeight(),
-        shape = RoundedCornerShape(0),
-        backgroundColor = MaterialTheme.colors.background
-    ) {
+        // base with elevation
+        Card(
+            elevation = 5.dp,
+            modifier = Modifier.fillMaxHeight(),
+            shape = RoundedCornerShape(0),
+            backgroundColor = MaterialTheme.colors.background
+        ) {
 
-        // split in two regions
-        Column {
+            // split in two regions
+            Column {
 
-            // region at top (navigation points)
-            Column(
-                modifier = Modifier.width(200.dp),
-                verticalArrangement = Arrangement.Top
-            ) {
+                // region at top (navigation points)
+                Column(
+                    modifier = Modifier.width(200.dp),
+                    verticalArrangement = Arrangement.Top
+                ) {
 
-                Spacer(
-                    modifier = Modifier.height(8.dp)
-                )
+                    Spacer(
+                        modifier = Modifier.height(8.dp)
+                    )
 
-                menuButton(
-                    title = "Dashboard",
-                    onClick = { navigationView.value = NavigationView.Dashboard }
-                )
+                    menuButton(
+                        title = "Dashboard",
+                        onClick = { navigationView.value = NavigationView.Dashboard }
+                    )
 
-                menuButton(
-                    title = "Commands",
-                    onClick = { navigationView.value = NavigationView.Commands }
-                )
+                    menuButton(
+                        title = "Commands",
+                        onClick = { navigationView.value = NavigationView.Commands }
+                    )
 
-                menuButton(
-                    title = "Settings",
-                    onClick = { navigationView.value = NavigationView.Settings }
-                )
-            }
+                    menuButton(
+                        title = "Settings",
+                        onClick = { navigationView.value = NavigationView.Settings }
+                    )
+                }
 
-            // region at bottom (chatbot controls)
-            Column(
-                modifier = Modifier.width(200.dp).fillMaxHeight(),
-                verticalArrangement = Arrangement.Bottom
-            ) {
+                // region at bottom (chatbot controls)
+                Column(
+                    modifier = Modifier.width(200.dp).fillMaxHeight(),
+                    verticalArrangement = Arrangement.Bottom
+                ) {
 
-                menuButton(
-                    title = chatbotButtonText.value,
-                    onClick = {
+                    menuButton(
+                        title = chatbotButtonText.value,
+                        onClick = {
 
-                        when (chatbot.status) {
+                            when (chatbot.status) {
 
-                            ChatbotStatus.Running -> {
-                                chatbot.disconnect()
-                            }
+                                ChatbotStatus.Running -> {
+                                    chatbot.disconnect()
+                                }
 
-                            ChatbotStatus.Stopped -> {
-                                chatbot.connect()
-                            }
+                                ChatbotStatus.Stopped -> {
+                                    chatbot.connect()
+                                }
 
-                            else -> {
+                                else -> {
+                                }
                             }
                         }
-                    }
-                )
+                    )
 
-                Spacer(
-                    modifier = Modifier.height(8.dp)
-                )
+                    Spacer(
+                        modifier = Modifier.height(8.dp)
+                    )
 
+                }
             }
+        }
+    }
+
+    override fun updateChatbotState(status : ChatbotStatus) {
+
+        when (status) {
+
+            ChatbotStatus.Startup -> chatbotButtonText.value = "Chatbot starting..."
+            ChatbotStatus.Running -> chatbotButtonText.value = "Stop Chatbot"
+            ChatbotStatus.Shutdown -> chatbotButtonText.value = "Chatbot stopping..."
+            ChatbotStatus.Stopped -> chatbotButtonText.value = "Start Chatbot"
         }
     }
 }

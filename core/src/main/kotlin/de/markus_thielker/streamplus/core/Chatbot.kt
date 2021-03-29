@@ -16,9 +16,9 @@ import java.net.Socket
 import kotlin.concurrent.thread
 import kotlin.properties.Delegates
 
-class Chatbot(private val statusChangedListener : () -> Unit) {
+class Chatbot(private val uiComponent : UIComponent) {
 
-    var status by Delegates.observable(ChatbotStatus.Stopped) { _, _, _ -> statusChangedListener.invoke() }
+    var status by Delegates.observable(ChatbotStatus.Stopped) { _, _, newValue -> uiComponent.updateChatbotState(newValue) }
 
     private val streamer = TwitchAccount(TwitchAccountRole.Streamer)
     private val chatbot = TwitchAccount(TwitchAccountRole.Chatbot)
