@@ -6,17 +6,26 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import de.markus_thielker.streamplus.core.Chatbot
 import de.markus_thielker.streamplus.core.ChatbotStatus
 import de.markus_thielker.streamplus.core.UIComponent
+import de.markus_thielker.streamplus.core.components.InputDialogObject
+import de.markus_thielker.streamplus.core.components.MessageDialogObject
+import de.markus_thielker.streamplus.core.components.ValueNotEnteredException
 import de.markus_thielker.streamplus.ui.views.NavigationView
 import de.markus_thielker.streamplus.ui.views.commands.commandsView
 import de.markus_thielker.streamplus.ui.views.dashboard.dashboardView
 import de.markus_thielker.streamplus.ui.views.settings.settingsView
+import kotlinx.coroutines.delay
 import java.io.File
 
 fun main() { Application().run() }
@@ -29,6 +38,15 @@ class Application : UIComponent {
     // chatbot components
     private val chatbotButtonText = mutableStateOf("Start Chatbot")
     private var chatbot = Chatbot(this)
+
+    // input dialog components
+    private var inputDialog = mutableStateOf(InputDialogObject(title = "", button = ""))
+    private var inputDialogVisible = mutableStateOf(false)
+    private var inputDialogContent = mutableStateOf("")
+
+    // message dialog components
+    private var messageDialog = mutableStateOf(MessageDialogObject(title = ""))
+    private var messageDialogVisible = mutableStateOf(false)
 
     fun run() {
 
@@ -58,6 +76,14 @@ class Application : UIComponent {
 
                     // menu bar
                     sideMenu()
+
+                    // input dialog if visible = true
+                    if (inputDialogVisible.value)
+                        showInputDialog()
+
+                    // message dialog if visible = true
+                    if (messageDialogVisible.value)
+                        showMessageDialog()
 
                     // navigation host
                     when (navigationView.value) {
@@ -168,6 +194,90 @@ class Application : UIComponent {
             ChatbotStatus.Shutdown -> chatbotButtonText.value = "Chatbot stopping..."
             ChatbotStatus.Stopped -> chatbotButtonText.value = "Start Chatbot"
         }
+    }
+
+    override suspend fun requestInputDialog(dialog : InputDialogObject) : String {
+
+        // clear input field value
+        inputDialogContent.value = ""
+
+        // replace state dialog -> overwritten with visible = true
+        inputDialog.value = dialog
+        inputDialogVisible.value = true
+
+        // while dialog is visible wait here
+        while (inputDialogVisible.value) delay(200)
+
+        // check if input was confirmed with button click or closed another way
+        if (!inputDialog.value.confirmed) throw ValueNotEnteredException()
+
+        // return entered value
+        return inputDialogContent.value
+    }
+
+    override fun requestMessageDialog(dialog : MessageDialogObject) {
+        messageDialog.value = dialog
+        messageDialogVisible.value = true
+    }
+
+    @Composable
+    fun showInputDialog() {
+
+        Dialog(
+            onDismissRequest = { inputDialogVisible.value = false },
+            properties = DialogProperties(size = IntSize(400, 300)),
+            content = {
+                Column(modifier = Modifier.padding(16.dp).fillMaxWidth()) {
+                    Text(
+                        text = inputDialog.value.title,
+                        fontSize = 20.sp,
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = inputDialog.value.text,
+                        fontSize = 14.sp,
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                    TextField(
+                        value = inputDialogContent.value,
+                        onValueChange = {
+                            inputDialogContent.value = it
+                        },
+                        label = { Text(inputDialog.value.hint) },
+                        modifier = Modifier
+                            .size(400.dp, 55.dp)
+                            .clip(shape = RoundedCornerShape(5.dp))
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Button(
+                        onClick = {
+                            inputDialog.value.confirmed = true
+                            inputDialogVisible.value = false
+                        },
+                        content = { Text(text = inputDialog.value.button) },
+                        modifier = Modifier.align(Alignment.End)
+                    )
+                }
+            }
+        )
+    }
+
+    @Composable
+    fun showMessageDialog() {
+
+        AlertDialog(
+            title = { Text(messageDialog.value.title) },
+            text = { Text(messageDialog.value.text) },
+            onDismissRequest = { messageDialogVisible.value = false },
+            modifier = Modifier.clip(shape = RoundedCornerShape(5.dp)),
+            confirmButton = {
+                Button(
+                    onClick = { messageDialogVisible.value = false },
+                    content = { Text(text = "Okay") },
+                    modifier = Modifier.padding(16.dp)
+                )
+            },
+        )
     }
 }
 

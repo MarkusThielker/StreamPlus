@@ -2,6 +2,10 @@ package de.markus_thielker.streamplus.core.twitch.account
 
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import de.markus_thielker.streamplus.core.Chatbot
+import de.markus_thielker.streamplus.core.components.InputDialogObject
+import de.markus_thielker.streamplus.core.components.MessageDialogObject
+import de.markus_thielker.streamplus.core.components.ValueNotEnteredException
 import de.markus_thielker.streamplus.shared.network.*
 import io.ktor.client.*
 import io.ktor.client.engine.apache.*
@@ -25,7 +29,7 @@ import java.util.*
  * @author Markus Thielker
  *
  * */
-class TwitchAccount(private val role : TwitchAccountRole) {
+class TwitchAccount(private val parent : Chatbot, private val role : TwitchAccountRole) {
 
     // connection state
     var isConnected = false
@@ -94,28 +98,35 @@ class TwitchAccount(private val role : TwitchAccountRole) {
 
         } else isConnected = refreshAccessToken()
 
-        // update stored account tokens to file
-        CoroutineScope(Dispatchers.IO).launch {
+        // execute steps only if validation was successful
+        if (isConnected) {
 
-            // update tokens in map
-            accounts[role]!!["accessToken"] = accessToken
-            accounts[role]!!["refreshToken"] = refreshToken
+            // update stored account tokens to file
+            CoroutineScope(Dispatchers.IO).launch {
 
-            // convert map to json sting
-            val writeString = Gson().toJson(accounts)
+                // update tokens in map
+                accounts[role]!!["accessToken"] = accessToken
+                accounts[role]!!["refreshToken"] = refreshToken
 
-            // write string to file
-            // TODO: add file encryption to protect tokens
-            file.writeText(writeString)
+                // convert map to json sting
+                val writeString = Gson().toJson(accounts)
+
+                // write string to file
+                // TODO: add file encryption to protect tokens
+                file.writeText(writeString)
+            }
+
+            // validate the current accessToken
+            validateAccessToken()
+
+            // get the missing user data
+            getUserData()
+
+            // return true if validation was successful
+            return true
         }
 
-        // validate the current accessToken
-        validateAccessToken()
-
-        // get the missing user data
-        getUserData()
-
-        // return if connection was successful
+        // return false if validation failed
         return false
 
         // TODO: run background validation control thread to react on access revocations
@@ -129,7 +140,7 @@ class TwitchAccount(private val role : TwitchAccountRole) {
      * @author Markus Thielker
      *
      * */
-    private fun logIntoTwitchAccount() : String {
+    private suspend fun logIntoTwitchAccount() : String {
 
         // set url to authentication page
         val url = "https://id.twitch.tv/oauth2/authorize?client_id=$clientId&redirect_uri=$redirectUri&response_type=code&force_verify=true&scope="
@@ -142,10 +153,45 @@ class TwitchAccount(private val role : TwitchAccountRole) {
         // open browser with previously defined parameters
         Desktop.getDesktop().browse(URI("$url$scopes"))
 
-        // get user input of code due to missing GUI implementation
-        // TODO: request authorization code in UI dialog
-        print("Enter code ($role): ")
-        return readLine() ?: ""
+        // declare variable for dialog return value
+        val input : String
+        try {
+
+            // open input dialogs with preset data, depending on the accounts role
+            input = if (role == TwitchAccountRole.Chatbot)
+                parent.uiComponent.requestInputDialog(
+                    InputDialogObject(
+                        title = "Authorize chatbot",
+                        text = "Please log into your chatbot account, using the browser window just opened. You get redirected to a website telling you the code.",
+                        hint = "Enter code here...",
+                        button = "Confirm input"
+                    )
+                )
+            else {
+                parent.uiComponent.requestInputDialog(
+                    InputDialogObject(
+                        title = "Authorize streamer",
+                        text = "Please log into your streamer account, using the browser window just opened. You get redirected to a website telling you the code.",
+                        hint = "Enter code here...",
+                        button = "Confirm input"
+                    )
+                )
+            }
+        }
+        // catch exception in case the dialog is closed without confirmation
+        catch (e : ValueNotEnteredException) {
+
+            parent.uiComponent.requestMessageDialog(
+                MessageDialogObject(
+                    title = "Connection error",
+                    text = "Without giving StreamPlus the permission to use the linked accounts, the chatbot can't start and connect to your chat.")
+            )
+
+            return "failed"
+        }
+
+        // return entered code
+        return input
     }
 
     /**
@@ -157,6 +203,9 @@ class TwitchAccount(private val role : TwitchAccountRole) {
      *
      * */
     private suspend fun validateLogin() : Boolean {
+
+        // check if code was entered in previous step
+        if (accessToken == "failed") return false
 
         // post request -> validate login via custom server
         val response = httpClient.post<TwitchTokenResponse> {

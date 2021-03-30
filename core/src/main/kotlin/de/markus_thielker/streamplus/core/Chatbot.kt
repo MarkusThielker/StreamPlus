@@ -16,12 +16,12 @@ import java.net.Socket
 import kotlin.concurrent.thread
 import kotlin.properties.Delegates
 
-class Chatbot(private val uiComponent : UIComponent) {
+class Chatbot(val uiComponent : UIComponent) {
 
     var status by Delegates.observable(ChatbotStatus.Stopped) { _, _, newValue -> uiComponent.updateChatbotState(newValue) }
 
-    private val streamer = TwitchAccount(TwitchAccountRole.Streamer)
-    private val chatbot = TwitchAccount(TwitchAccountRole.Chatbot)
+    private val streamer = TwitchAccount(this, TwitchAccountRole.Streamer)
+    private val chatbot = TwitchAccount(this, TwitchAccountRole.Chatbot)
 
     private lateinit var client : Socket
     private lateinit var reader : BufferedReader
@@ -45,17 +45,20 @@ class Chatbot(private val uiComponent : UIComponent) {
 
                 // connect both twitch accounts (chat bot first for browser session reasons)
                 chatbot.connect()
-                streamer.connect()
+                if (chatbot.isConnected) streamer.connect()
 
             }
 
-            // update status and trigger button text
-            status = ChatbotStatus.Running
+            if (chatbot.isConnected && streamer.isConnected) {
+                // update status and trigger button text
+                status = ChatbotStatus.Running
 
-            // TODO: check if accounts are connected
-
-            // finally join streamers chat
-            joinChat()
+                // finally join streamers chat
+                joinChat()
+            }
+            else {
+                status = ChatbotStatus.Stopped
+            }
         }
     }
 
