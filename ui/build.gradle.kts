@@ -16,9 +16,16 @@ compose.desktop {
     application {
         mainClass = "de.markus_thielker.streamplus.ui.ApplicationKt"
         nativeDistributions {
-            windows.packageVersion = "0.1.0"
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+
+            modules("java.instrument", "java.naming", "java.security.jgss", "java.sql", "jdk.unsupported")
+
             packageName = "StreamPlus"
+            packageVersion = "1.0.0"
+            description = "A Twitch chat bot created with Kotlin Compose Desktop"
+            copyright = "StreamPlus © 2021 by Markus Thielker is licensed under CC BY-NC-ND 4.0"
+            vendor = "Markus Thielker"
+
+            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
         }
     }
 }
